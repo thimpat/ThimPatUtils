@@ -7,7 +7,8 @@ class ResizeVideoFrames:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "frame":        ("IMAGE",),
+                # Change "frame" to "images" to update the input node's display name
+                "images":       ("IMAGE",),
                 "target_width": ("INT",   {"default": 512, "min": 64,  "max": 4096}),
                 "target_height":("INT",   {"default": 512, "min": 64,  "max": 4096}),
                 "mode":         (["stretch", "crop"],),
@@ -18,9 +19,11 @@ class ResizeVideoFrames:
     FUNCTION     = "resize"
     CATEGORY     = "ThimPatUtils"
 
-    def resize(self, frame, target_width, target_height, mode):
+    # Update the function's parameter name from 'frame' to 'images' to match the INPUT_TYPES change
+    def resize(self, images, target_width, target_height, mode):
         # 1) Unpack ComfyUI’s tensor/PIL into a NumPy array
-        raw = getattr(frame, "image", frame)
+        # The input variable name is now "images"
+        raw = getattr(images, "image", images)
         if isinstance(raw, torch.Tensor):
             arr = raw.detach().cpu().numpy()
         else:
@@ -44,9 +47,9 @@ class ResizeVideoFrames:
         out_tensors = []
 
         for i in range(B):
-            img = nhwc[i]   # H0×W0×C
+            img = nhwc[i]   # H0xW0xC
 
-            # 3) Convert floats→uint8 for OpenCV
+            # 3) Convert floats->uint8 for OpenCV
             if img.dtype != np.uint8:
                 img_u8 = (np.clip(img, 0.0, 1.0) * 255.0).round().astype(np.uint8)
             else:
@@ -89,14 +92,16 @@ class ResizeVideoFrames:
                 rgb_u8 = proc
 
             # 7) Turn into float32 [0,1]
-            # ComfyUI's IMAGE type is (B, H, W, C) in [0,1] float32
-            tensor = torch.from_numpy(rgb_u8.astype(np.float32)/255.0) # (H, W, C) float32 in [0,1]
+            # ComfyUI's IMAGE type is (B, H, W, C) in [0,1] float32.
+            # Convert NumPy HWC to PyTorch HWC float32 tensor.
+            tensor = torch.from_numpy(rgb_u8.astype(np.float32) / 255.0)
+
+            # Append the HWC tensor to our list.
             out_tensors.append(tensor)
 
-        # Combine all HWC tensors into a single BHWC tensor
-        # Note: The input conversion logic in your original code results in HWC tensors, 
-        # so we stack them directly to create BHWC.
-        output_tensor = torch.stack(out_tensors, dim=0) # (B, H, W, C)
+        # After the loop, stack all HWC tensors into a single BHWC tensor.
+        # This creates a proper image batch for ComfyUI.
+        output_tensor = torch.stack(out_tensors, dim=0)
 
-        # Return a tuple containing the single BHWC tensor
-        return (output_tensor,) 
+        # Return a tuple containing the single BHWC tensor.
+        return (output_tensor,)
