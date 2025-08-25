@@ -8,7 +8,6 @@ A collection of essential utility nodes for handling image sequences, video, aud
 
 | Node Display Name                      | Class Name                   | Description                                                                                   | Category           |
 | :------------------------------------- | :--------------------------- | :-------------------------------------------------------------------------------------------- | :----------------- |
-| **🧩 Extract Images from LatentSync**   | `ExtractImagesFromLatentSync` | Synchronously extracts and saves a sequence of images from a latent space sequence.           | `video/extract`    |
 | **🎵 Extract Audio Info**               | `ExtractAudioInfo`           | Reads an audio file and outputs key information such as sample rate, duration, and channels.  | `audio/info`       |
 | **📐 Resize Image Sequence**            | `ResizeVideoFrames`          | Resizes each image in an input sequence to a specified width and height.                     | `video/transform`  |
 
@@ -45,33 +44,7 @@ A collection of essential utility nodes for handling image sequences, video, aud
 
 ## ⚙️ Usage & Node Details
 
-### 1. 🧩 Extract Images from LatentSync
-
-This node takes a sequence of latents (for example, from a latent‐video model) and produces a synchronized list of decoded images.
-
-- **Inputs:**  
-  - `LATENT` (Sequence of latents)  
-  - `filename_prefix` (string)  
-  - `save_output` (boolean)  
-- **Outputs:**  
-  - `IMAGE` (Sequence of decoded images)  
-
----
-
-### 2. 🎵 Extract Audio Info
-
-Quickly inspect an audio file’s metadata before feeding it into a generation or editing pipeline.
-
-- **Inputs:**  
-  - `audio_path` (string, path to the audio file)  
-- **Outputs:**  
-  - `duration` (float)  
-  - `sample_rate` (int)  
-  - `channels` (int)  
-
----
-
-### 3. 📐 Resize Image Sequence
+### 1. 📐 Resize Image Sequence
 
 Rescales each image in an input sequence—ideal when a downstream node (e.g., a VAE or model) requires a specific resolution.
 
