@@ -1,104 +1,92 @@
 import torch
 import numpy as np
+import math
 
-# Define a custom data type that can accept any data type from other nodes.
-# This is a workaround for ComfyUI's strict type-checking.
-ANY = "*"
-
-class DisplayAnyInput:
+class CalculateAndDisplay:
     """
-    A utility node to display information about any type of input in the console.
-    This node is useful for debugging and checking the values of variables
-    at different points in a workflow. It acts as a pass-through node,
-    allowing the workflow to continue.
+    A utility node that evaluates a mathematical formula using up to five
+    numerical inputs and displays the result in the console.
+    This is useful for debugging and performing quick calculations within
+    a ComfyUI workflow.
     """
 
     @classmethod
     def INPUT_TYPES(cls):
         """
-        Defines the inputs for the node. It accepts a single, generic input of
-        any type, and an optional title for clarity in the console.
+        Defines the inputs for the node.
+        - 'formula': The mathematical expression to evaluate as a string.
+        - 'input1' through 'input5': Up to five numerical inputs.
+        - 'title': An optional title for the console output.
         """
         return {
             "required": {
-                "input_data": (ANY, {"forceInput": True}),  # The asterisk (*) signifies any data type
+                "formula": ("STRING", {"multiline": False, "default": "input1"}),
+                "input1": ("FLOAT", {"default": 0.0}),
+                "input2": ("FLOAT", {"default": 0.0}),
+                "input3": ("FLOAT", {"default": 0.0}),
+                "input4": ("FLOAT", {"default": 0.0}),
+                "input5": ("FLOAT", {"default": 0.0}),
             },
             "optional": {
-                "title": ("STRING", {"multiline": False, "default": "Display Info"}),
+                "title": ("STRING", {"multiline": False, "default": "Calculated Value"}),
             }
         }
 
-    # The node must now return its input to act as a pass-through.
-    RETURN_TYPES = (ANY,)
-    FUNCTION = "display_info"
+    RETURN_TYPES = ()
+    FUNCTION = "calculate"
     CATEGORY = "🎨 ThimPatUtils/Debugging"
 
-    def display_info(self, input_data, title):
+    def calculate(self, formula, input1, input2, input3, input4, input5, title):
         """
-        The main function of the node. It prints the type, value, and other
-        relevant information about the input data to the console.
+        Calculates the result of the given formula and displays it.
+        The function uses a safe evaluation method to prevent malicious code
+        from being executed.
         """
-        print(f"\n--- {title} ---")
-        
-        # Check the type of the input_data
-        if isinstance(input_data, torch.Tensor):
-            # If the input is a PyTorch tensor (e.g., IMAGE, LATENT)
-            print("Type: torch.Tensor (ComfyUI IMAGE/LATENT)")
-            print(f"Shape: {input_data.shape}")
-            print(f"Data type: {input_data.dtype}")
-            print(f"Min value: {input_data.min().item():.4f}")
-            print(f"Max value: {input_data.max().item():.4f}")
-            if input_data.nelement() <= 20: # Display small tensors fully
-                print(f"Value: \n{input_data}")
-        
-        elif isinstance(input_data, list) and all(isinstance(item, torch.Tensor) for item in input_data):
-            # If the input is a list of tensors (e.g., a list of images)
-            print("Type: List of torch.Tensor")
-            print(f"Number of tensors in list: {len(input_data)}")
-            if len(input_data) > 0:
-                first_tensor = input_data[0]
-                print(f"First tensor shape: {first_tensor.shape}")
-                print(f"First tensor data type: {first_tensor.dtype}")
-                print(f"First tensor min value: {first_tensor.min().item():.4f}")
-                print(f"First tensor max value: {first_tensor.max().item():.4f}")
+        # Dictionary of allowed mathematical functions from the 'math' module
+        # This prevents arbitrary code execution
+        allowed_functions = {
+            'abs': abs, 'round': round, 'int': int, 'float': float,
+            'sqrt': math.sqrt, 'pow': math.pow, 'exp': math.exp,
+            'log': math.log, 'log10': math.log10, 'sin': math.sin,
+            'cos': math.cos, 'tan': math.tan, 'radians': math.radians,
+            'degrees': math.degrees, 'pi': math.pi, 'e': math.e,
+        }
 
-        elif isinstance(input_data, str):
-            # If the input is a string
-            print("Type: STRING")
-            print(f"Value: \"{input_data}\"")
+        # Create a dictionary of local variables for the evaluation, including inputs
+        local_vars = {
+            'input1': input1,
+            'input2': input2,
+            'input3': input3,
+            'input4': input4,
+            'input5': input5,
+        }
         
-        elif isinstance(input_data, (int, float)):
-            # If the input is a number
-            print("Type: NUMBER")
-            print(f"Value: {input_data}")
-
-        elif isinstance(input_data, dict):
-            # If the input is a dictionary (e.g., AUDIO)
-            print("Type: DICT")
-            print(f"Keys: {list(input_data.keys())}")
-            # Optional: print some key-value pairs for common dictionary types
-            if "duration" in input_data:
-                print(f"Duration: {input_data.get('duration')}")
-            if "sample_rate" in input_data:
-                print(f"Sample Rate: {input_data.get('sample_rate')}")
+        # Add the allowed math functions to the local variables
+        local_vars.update(allowed_functions)
+        
+        try:
+            # Safely evaluate the formula using eval with a restricted global environment
+            result = eval(formula, {"__builtins__": {}}, local_vars)
             
-        else:
-            # For any other unsupported or unknown type
-            print("Type: UNKNOWN or unsupported")
-            print(f"Python Type: {type(input_data)}")
-            print(f"Value: {input_data}")
+            # Print the result to the console
+            print(f"\n--- {title} ---")
+            print(f"Formula: {formula}")
+            print(f"Inputs: input1={input1}, input2={input2}, input3={input3}, input4={input4}, input5={input5}")
+            print(f"Result: {result}")
+            print("--------------------")
 
-        print("--------------------")
-        
-        # The node must now return its input to act as a pass-through
-        return (input_data,)
+        except Exception as e:
+            # Print an error message if the evaluation fails
+            print(f"\n--- Calculation Error: {title} ---")
+            print(f"Error evaluating formula '{formula}': {e}")
+            print("--------------------")
 
 # A dictionary that provides the class name and display name for ComfyUI
 NODE_CLASS_MAPPINGS = {
-    "DisplayAnyInput": DisplayAnyInput
+    "CalculateAndDisplay": CalculateAndDisplay
 }
 
 # A dictionary that specifies the nodes' human-readable names
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DisplayAnyInput": "🔍 Display Any Input"
+    "CalculateAndDisplay": "🧮 Calculate & Display"
 }
