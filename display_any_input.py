@@ -1,11 +1,16 @@
 import torch
 import numpy as np
 
+# Define a custom data type that can accept any data type from other nodes.
+# This is a workaround for ComfyUI's strict type-checking.
+ANY = "*"
+
 class DisplayAnyInput:
     """
     A utility node to display information about any type of input in the console.
     This node is useful for debugging and checking the values of variables
-    at different points in a workflow.
+    at different points in a workflow. It acts as a pass-through node,
+    allowing the workflow to continue.
     """
 
     @classmethod
@@ -16,14 +21,15 @@ class DisplayAnyInput:
         """
         return {
             "required": {
-                "input_data": ("*", {"forceInput": True}),  # The asterisk (*) signifies any data type
+                "input_data": (ANY, {"forceInput": True}),  # The asterisk (*) signifies any data type
             },
             "optional": {
                 "title": ("STRING", {"multiline": False, "default": "Display Info"}),
             }
         }
 
-    RETURN_TYPES = () # This node does not pass an output to the next node
+    # The node must now return its input to act as a pass-through.
+    RETURN_TYPES = (ANY,)
     FUNCTION = "display_info"
     CATEGORY = "🎨 ThimPatUtils/Debugging"
 
@@ -84,7 +90,8 @@ class DisplayAnyInput:
 
         print("--------------------")
         
-        return ()
+        # The node must now return its input to act as a pass-through
+        return (input_data,)
 
 # A dictionary that provides the class name and display name for ComfyUI
 NODE_CLASS_MAPPINGS = {
