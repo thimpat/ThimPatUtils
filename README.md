@@ -77,6 +77,8 @@ Rescales each image in an input sequence—ideal when a downstream node (e.g., a
 
 <video src="./demo/demo-resize-frames.mp4" controls muted autoplay loop style="max-width: 100%; height: auto; border-radius: 12px;"></video>
 
+![Demo GIF](./demo/demo-resize-frames.gif)
+
 - **Inputs:**  
   - `images` (Image sequence)  
   - `width` (int)  
