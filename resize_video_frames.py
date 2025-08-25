@@ -10,8 +10,8 @@ class ResizeVideoFrames:
                 "images":       ("IMAGE",),
                 "target_width": ("INT",   {"default": 512, "min": 64,  "max": 4096}),
                 "target_height":("INT",   {"default": 512, "min": 64,  "max": 4096}),
-                "mode":         (["stretch", "crop"],),
-                # New input for crop position
+                # Add 'pad' to the list of modes
+                "mode":         (["stretch", "crop", "pad"],),
                 "crop_position":(["center", "top", "bottom", "left", "right"],),
             }
         }
@@ -62,12 +62,12 @@ class ResizeVideoFrames:
             else:
                 cv_in = img_u8
 
-            # 5) Resize
+            # 5) Resize and/or Pad
             if mode == "stretch":
                 proc = cv2.resize(cv_in,
                                   (target_width, target_height),
                                   interpolation=cv2.INTER_AREA)
-            else:
+            elif mode == "crop":
                 # Calculate the crop
                 aspect = target_width / target_height
                 h, w = cv_in.shape[:2]
@@ -99,6 +99,34 @@ class ResizeVideoFrames:
                 proc = cv2.resize(crop,
                                   (target_width, target_height),
                                   interpolation=cv2.INTER_AREA)
+            elif mode == "pad":
+                # Calculate pad dimensions
+                h, w = cv_in.shape[:2]
+                aspect = target_width / target_height
+                
+                # Resize the image while maintaining aspect ratio
+                if w / h > aspect:
+                    # Image is wider, pad vertically
+                    new_w = target_width
+                    new_h = int(h * (target_width / w))
+                    resized_img = cv2.resize(cv_in, (new_w, new_h), interpolation=cv2.INTER_AREA)
+                    # Create a black canvas for the final image
+                    canvas = np.zeros((target_height, target_width, C), dtype=np.uint8)
+                    # Pad
+                    y_start = (target_height - new_h) // 2
+                    canvas[y_start:y_start + new_h, :, :] = resized_img
+                else:
+                    # Image is taller, pad horizontally
+                    new_h = target_height
+                    new_w = int(w * (target_height / h))
+                    resized_img = cv2.resize(cv_in, (new_w, new_h), interpolation=cv2.INTER_AREA)
+                    # Create a black canvas for the final image
+                    canvas = np.zeros((target_height, target_width, C), dtype=np.uint8)
+                    # Pad
+                    x_start = (target_width - new_w) // 2
+                    canvas[:, x_start:x_start + new_w, :] = resized_img
+
+                proc = canvas
 
             # 6) Swap back to RGB(A)
             if C == 4:
