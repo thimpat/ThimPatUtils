@@ -14,7 +14,7 @@ class ExtractImagesFromLatentSync:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "convert"
 
-    CATEGORY = "PatUtils"
+    CATEGORY = "ThimPatUtils"
 
     def convert(self, data, video_path):
         # Your latent-to-image logic here

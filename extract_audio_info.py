@@ -1,4 +1,4 @@
-# custom_nodes/PatUtils/extract_audio_info.py
+# custom_nodes/ThimPatUtils/extract_audio_info.py
 
 import soundfile as sf
 import numpy as np
@@ -22,7 +22,7 @@ class ExtractAudioInfo:
         "frame_count"
     )
     FUNCTION   = "extract_audio_info"
-    NODE_PATH  = "PatUtils/Audio Tools/Extract Audio Info"
+    NODE_PATH  = "ThimPatUtils/Audio Tools/Extract Audio Info"
     NODE_DESCRIPTION = (
         "Inputs an audio dict or file path plus FPS, and outputs:\n"
         "- duration (s)\n"
