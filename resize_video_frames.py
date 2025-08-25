@@ -7,11 +7,12 @@ class ResizeVideoFrames:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                # Change "frame" to "images" to update the input node's display name
                 "images":       ("IMAGE",),
                 "target_width": ("INT",   {"default": 512, "min": 64,  "max": 4096}),
                 "target_height":("INT",   {"default": 512, "min": 64,  "max": 4096}),
                 "mode":         (["stretch", "crop"],),
+                # New input for crop position
+                "crop_position":(["center", "top", "bottom", "left", "right"],),
             }
         }
 
@@ -19,10 +20,8 @@ class ResizeVideoFrames:
     FUNCTION     = "resize"
     CATEGORY     = "🎨 ThimPatUtils"
 
-    # Update the function's parameter name from 'frame' to 'images' to match the INPUT_TYPES change
-    def resize(self, images, target_width, target_height, mode):
+    def resize(self, images, target_width, target_height, mode, crop_position):
         # 1) Unpack ComfyUI’s tensor/PIL into a NumPy array
-        # The input variable name is now "images"
         raw = getattr(images, "image", images)
         if isinstance(raw, torch.Tensor):
             arr = raw.detach().cpu().numpy()
@@ -69,16 +68,34 @@ class ResizeVideoFrames:
                                   (target_width, target_height),
                                   interpolation=cv2.INTER_AREA)
             else:
+                # Calculate the crop
                 aspect = target_width / target_height
                 h, w = cv_in.shape[:2]
-                if w/h > aspect:
+                
+                x0, y0 = 0, 0
+                
+                # If the image is wider than the target aspect ratio, crop horizontally
+                if w / h > aspect:
                     nw = int(h * aspect)
-                    x0 = (w - nw)//2
-                    crop = cv_in[:, x0:x0+nw]
+                    if crop_position == "center":
+                        x0 = (w - nw) // 2
+                    elif crop_position == "left":
+                        x0 = 0
+                    elif crop_position == "right":
+                        x0 = w - nw
+                    crop = cv_in[:, x0:x0 + nw]
+                # If the image is taller than the target aspect ratio, crop vertically
                 else:
                     nh = int(w / aspect)
-                    y0 = (h - nh)//2
-                    crop = cv_in[y0:y0+nh, :]
+                    if crop_position == "center":
+                        y0 = (h - nh) // 2
+                    elif crop_position == "top":
+                        y0 = 0
+                    elif crop_position == "bottom":
+                        y0 = h - nh
+                    crop = cv_in[y0:y0 + nh, :]
+                
+                # After cropping, resize to the target dimensions
                 proc = cv2.resize(crop,
                                   (target_width, target_height),
                                   interpolation=cv2.INTER_AREA)
@@ -92,15 +109,12 @@ class ResizeVideoFrames:
                 rgb_u8 = proc
 
             # 7) Turn into float32 [0,1]
-            # ComfyUI's IMAGE type is (B, H, W, C) in [0,1] float32.
-            # Convert NumPy HWC to PyTorch HWC float32 tensor.
             tensor = torch.from_numpy(rgb_u8.astype(np.float32) / 255.0)
 
             # Append the HWC tensor to our list.
             out_tensors.append(tensor)
 
         # After the loop, stack all HWC tensors into a single BHWC tensor.
-        # This creates a proper image batch for ComfyUI.
         output_tensor = torch.stack(out_tensors, dim=0)
 
         # Return a tuple containing the single BHWC tensor.
