@@ -13,6 +13,8 @@ class ExtractAudioInfo:
             }
         }
 
+    CATEGORY = "🎨 ThimPatUtils"
+
     RETURN_TYPES = ("FLOAT","INT","INT","DICT","INT")
     RETURN_NAMES = (
         "duration",

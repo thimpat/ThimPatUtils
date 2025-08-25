@@ -17,7 +17,7 @@ class ResizeVideoFrames:
 
     RETURN_TYPES = ("IMAGE",)
     FUNCTION     = "resize"
-    CATEGORY     = "ThimPatUtils"
+    CATEGORY     = "🎨 ThimPatUtils"
 
     # Update the function's parameter name from 'frame' to 'images' to match the INPUT_TYPES change
     def resize(self, images, target_width, target_height, mode):
