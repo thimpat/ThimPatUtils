@@ -75,6 +75,8 @@ Quickly inspect an audio file’s metadata before feeding it into a generation o
 
 Rescales each image in an input sequence—ideal when a downstream node (e.g., a VAE or model) requires a specific resolution.
 
+<video src="./demo/demo-resize-frames.mp4" controls muted autoplay loop style="max-width: 100%; height: auto; border-radius: 12px;"></video>
+
 - **Inputs:**  
   - `images` (Image sequence)  
   - `width` (int)  
