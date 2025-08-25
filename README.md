@@ -76,7 +76,7 @@ Quickly inspect an audio file’s metadata before feeding it into a generation o
 Rescales each image in an input sequence—ideal when a downstream node (e.g., a VAE or model) requires a specific resolution.
 
 - **Inputs:**  
-  - `IMAGE` (Image sequence)  
+  - `images` (Image sequence)  
   - `width` (int)  
   - `height` (int)  
   - `interpolation` (string; options: `bicubic`, `nearest`, etc.)  
@@ -88,3 +88,7 @@ Rescales each image in an input sequence—ideal when a downstream node (e.g., a
 ## 🤝 Contribution
 
 If you have ideas for new utilities or spot a bug, please open an issue or submit a Pull Request. We welcome your feedback and improvements!
+
+## Author
+
+Find my other projects on https://perspectivedev.com/gb/market.html#/authors/1
