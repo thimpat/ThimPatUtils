@@ -2,16 +2,12 @@ import torch
 import numpy as np
 import collections
 
-# Define a custom data type that can accept any data type from other nodes.
-# This is a workaround for ComfyUI's strict type-checking.
-ANY = "*"
-
-class PreviewAny:
+class PreviewInfo:
     """
     A utility node to preview information about any type of input in the console.
     This node is useful for debugging and checking the values of variables
-    at different points in a workflow. It acts as a pass-through node,
-    allowing the workflow to continue.
+    at different points in a workflow. It acts as a final node in the workflow,
+    stopping the execution chain.
     """
 
     @classmethod
@@ -22,15 +18,15 @@ class PreviewAny:
         """
         return {
             "required": {
-                "input_data": (ANY, {"forceInput": True}),  # The asterisk (*) signifies any data type
+                "input_data": ("*", {"forceInput": True}),  # The asterisk (*) signifies any data type
             },
             "optional": {
                 "title": ("STRING", {"multiline": False, "default": "Preview Any"}),
             }
         }
 
-    # The node must now return its input to act as a pass-through.
-    RETURN_TYPES = (ANY,)
+    # The node now has no return types, making it a "final" or "sink" node.
+    RETURN_TYPES = ()
     FUNCTION = "preview_info"
     CATEGORY = "🎨 ThimPatUtils"
 
@@ -93,16 +89,15 @@ class PreviewAny:
             print(f"Value: {input_data}")
 
         print("--------------------")
-        
-        # The node must now return its input to act as a pass-through
-        return (input_data,)
+
+        # No return statement is needed, as this is a final node.
 
 # A dictionary that provides the class name and display name for ComfyUI
 NODE_CLASS_MAPPINGS = {
-    "PreviewAny": PreviewAny
+    "PreviewInfo": PreviewInfo
 }
 
 # A dictionary that specifies the nodes' human-readable names
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "PreviewAny": "👁️ Preview Any"
+    "PreviewInfo": "👁️ Preview Info"
 }
