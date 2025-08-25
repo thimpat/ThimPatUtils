@@ -32,9 +32,10 @@ class CalculateAndDisplay:
             }
         }
 
-    RETURN_TYPES = ()
+    # Added a return type so the node can be connected to other nodes
+    RETURN_TYPES = ("FLOAT",)
     FUNCTION = "calculate"
-    CATEGORY = "🎨 ThimPatUtils/Debugging"
+    CATEGORY = "🎨 ThimPatUtils"
 
     def calculate(self, formula, input1, input2, input3, input4, input5, title):
         """
@@ -75,11 +76,17 @@ class CalculateAndDisplay:
             print(f"Result: {result}")
             print("--------------------")
 
+            # The node must now return its input to act as a pass-through
+            return (result,)
+
         except Exception as e:
             # Print an error message if the evaluation fails
             print(f"\n--- Calculation Error: {title} ---")
             print(f"Error evaluating formula '{formula}': {e}")
             print("--------------------")
+            
+            # Return a default value in case of an error to prevent the workflow from crashing
+            return (0.0,)
 
 # A dictionary that provides the class name and display name for ComfyUI
 NODE_CLASS_MAPPINGS = {
@@ -88,5 +95,5 @@ NODE_CLASS_MAPPINGS = {
 
 # A dictionary that specifies the nodes' human-readable names
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "CalculateAndDisplay": "🧮 Calculate & Display"
+    "CalculateAndDisplay": "🧮 Calculate & Display (Reusable)"
 }
